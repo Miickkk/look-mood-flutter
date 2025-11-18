@@ -1,9 +1,12 @@
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:look_mood/views/cabinet.dart';
 import 'package:look_mood/views/login.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:look_mood/views/friends.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -137,7 +140,7 @@ class _HomeViewState extends State<HomeView>
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 50),
 
                 Expanded(
                   child: Padding(
@@ -177,6 +180,15 @@ class _HomeViewState extends State<HomeView>
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const AmigosView()),
+            );
+            break;
+        }
+
+        switch (index) {
+          case 1:
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const RoupasView()),
             );
             break;
         }

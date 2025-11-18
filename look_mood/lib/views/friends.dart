@@ -1,6 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:look_mood/views/friends_inside.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class AmigosView extends StatefulWidget {
   const AmigosView({super.key});
@@ -14,18 +17,17 @@ class _AmigosViewState extends State<AmigosView>
   final TextEditingController _searchController = TextEditingController();
   late AnimationController _controller;
 
-  bool _mostrarBusca = false; // controla se a barra aparece ou não
+  bool _mostrarBusca = false;
 
   final Color roxoPrincipal = const Color(0xFF6137DE);
   final Color roxoEscuro = const Color(0xFF241536);
-  final Color roxoBotao = const Color(0xFF3E22A0); // botão mais escuro
 
   final List<String> nomesAmigos = [
     "Maria Luiza",
     "Kamili Martins",
-    "Julia Santos",
-    "tia Bete",
     "Max",
+    "Antonio",
+    "Bola",
     "Tuti",
   ];
 
@@ -50,6 +52,7 @@ class _AmigosViewState extends State<AmigosView>
     return Scaffold(
       body: Stack(
         children: [
+          // FUNDO ANIMADO
           AnimatedBuilder(
             animation: _controller,
             builder: (context, _) {
@@ -66,40 +69,67 @@ class _AmigosViewState extends State<AmigosView>
 
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Título
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "Look & Mood",
-                          style: GoogleFonts.cinzelDecorative(
+                  const SizedBox(height: 25),
+
+                  // ---------------- HEADER CORRIGIDO ----------------
+                  Row(
+                    children: [
+                      // botão à esquerda
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white30, width: 1),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
                             color: Colors.white,
-                            fontSize: 44,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 4.5,
                           ),
                         ),
-                        Text(
-                          "Busque e adicione seus amigos",
-                          style: GoogleFonts.lora(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            letterSpacing: 1.0,
-                          ),
+                      ),
+
+                      // título centralizado
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              "Look & Mood",
+                              style: GoogleFonts.cinzelDecorative(
+                                color: Colors.white,
+                                fontSize: 44,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 5.5,
+                              ),
+                            ),
+                            Text(
+                              "Encontre seus amigos aqui!",
+                              style: GoogleFonts.lora(
+                                color: Colors.white70,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+
+                      // espaço para balancear o botão
+                      const SizedBox(width: 50),
+                    ],
                   ),
 
                   const SizedBox(height: 30),
 
-                  // Botão de adicionar amigos
+                  // BOTÃO ADICIONAR AMIGOS
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -126,7 +156,7 @@ class _AmigosViewState extends State<AmigosView>
                     ),
                   ),
 
-                  // Campo de busca aparece ao clicar
+                  // CAMPO DE PESQUISA
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
                     child: _mostrarBusca
@@ -156,8 +186,10 @@ class _AmigosViewState extends State<AmigosView>
                           )
                         : const SizedBox.shrink(),
                   ),
-                  const SizedBox(height: 30),
 
+                  const SizedBox(height: 25),
+
+                  // LISTA DE AMIGOS
                   Expanded(
                     child: GridView.builder(
                       gridDelegate:
@@ -168,72 +200,55 @@ class _AmigosViewState extends State<AmigosView>
                           ),
                       itemCount: nomesAmigos.length,
                       itemBuilder: (context, index) {
-                        return Column(
-                          children: [
-                            Stack(
-                              alignment: Alignment.bottomRight,
-                              children: [
-                                CircleAvatar(
-                                  radius: 35,
-                                  backgroundColor: Colors.white.withOpacity(
-                                    0.1,
-                                  ),
-                                  child: Icon(
-                                    Icons.person,
-                                    color: Colors.white.withOpacity(0.7),
-                                    size: 35,
-                                  ),
-                                ),
-                                CircleAvatar(
-                                  backgroundColor: roxoPrincipal,
-                                  radius: 12,
-                                  child: const Icon(
-                                    Icons.add,
-                                    size: 15,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              nomesAmigos[index],
-                              style: GoogleFonts.lora(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    PerfilAmigoView(nome: nomesAmigos[index]),
                               ),
-                            ),
-                          ],
+                            );
+                          },
+                          child: Column(
+                            children: [
+                              Stack(
+                                alignment: Alignment.bottomRight,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 35,
+                                    backgroundColor: Colors.white.withOpacity(
+                                      0.1,
+                                    ),
+                                    child: Icon(
+                                      Icons.person,
+                                      color: Colors.white.withOpacity(0.7),
+                                      size: 35,
+                                    ),
+                                  ),
+                                  CircleAvatar(
+                                    radius: 12,
+                                    backgroundColor: roxoPrincipal,
+                                    child: const Icon(
+                                      Icons.visibility,
+                                      size: 15,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                nomesAmigos[index],
+                                style: GoogleFonts.lora(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         );
                       },
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  Center(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: roxoBotao, // cor mais escura
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 14,
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        "Concluído",
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -246,7 +261,7 @@ class _AmigosViewState extends State<AmigosView>
   }
 }
 
-// Fundo animado suave
+// FUNDO ANIMADO
 class _BackgroundPainter extends CustomPainter {
   final double animationValue;
   final Color roxoPrincipal;

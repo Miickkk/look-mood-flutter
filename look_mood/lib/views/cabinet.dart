@@ -1,0 +1,446 @@
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+class RoupasView extends StatefulWidget {
+  const RoupasView({super.key});
+
+  @override
+  State<RoupasView> createState() => _RoupasViewState();
+}
+
+class _RoupasViewState extends State<RoupasView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  final Color roxoPrincipal = const Color(0xFF6137DE);
+  final Color roxoEscuro = const Color(0xFF241536);
+
+  String categoriaSelecionada = "";
+  String buscaTexto = "";
+
+  final TextEditingController _searchController = TextEditingController();
+  final Map<String, bool> favoritos = {};
+
+  // categorias de roupas com imagens do assets
+  final List<Map<String, dynamic>> categorias = [
+    {"nome": "Casacos", "icon": "assets/icons/3.png"},
+    {"nome": "Calças", "icon": "assets/icons/4.png"},
+    {"nome": "Camisetas", "icon": "assets/icons/2.png"},
+    {"nome": "Vestidos", "icon": "assets/icons/1.png"},
+    {"nome": "Tênis", "icon": "assets/icons/5.png"},
+    {"nome": "Bolsas", "icon": "assets/icons/6.png"},
+    {"nome": "Saltos", "icon": "assets/icons/7.png"},
+  ];
+
+  // roupas por categoria com imagens também
+  final Map<String, List<Map<String, dynamic>>> roupasCategoria = {
+    "Casacos": [
+      {"nome": "Jaqueta jeans", "icon": "assets/icons/3.1.png"},
+      {"nome": "Casaco longo", "icon": "assets/icons/3.2.png"},
+    ],
+    "Calças": [
+      {"nome": "Calça jeans", "icon": "assets/icons/4.1.png"},
+      {"nome": "Calça social", "icon": "assets/icons/4.2.png"},
+    ],
+    "Camisetas": [
+      {"nome": "Camiseta social", "icon": "assets/icons/2.2.png"},
+      {"nome": "Camiseta comum", "icon": "assets/icons/2.1.png"},
+    ],
+    "Vestidos": [
+      {"nome": "Vestido comum", "icon": "assets/icons/1.1.png"},
+      {"nome": "Vestido social", "icon": "assets/icons/1.2.png"},
+    ],
+    "Tênis": [
+      {"nome": "Air Max", "icon": "assets/icons/5.1.png"},
+      {"nome": "All-Star", "icon": "assets/icons/5.2.png"},
+    ],
+    "Bolsas": [
+      {"nome": "Bolsa tiracolo", "icon": "assets/icons/6.1.png"},
+      {"nome": "Bolsa de mão", "icon": "assets/icons/6.2.png"},
+    ],
+    "Saltos": [
+      {"nome": "Salto alto", "icon": "assets/icons/7.1.png"},
+      {"nome": "Salto fino", "icon": "assets/icons/7.2.png"},
+    ],
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // ------------------------- FILTRO DE BUSCA -------------------------
+  List<Map<String, dynamic>> get roupasFiltradas {
+    List<Map<String, dynamic>> todasRoupas = [];
+
+    roupasCategoria.forEach((categoria, lista) {
+      for (var roupa in lista) {
+        todasRoupas.add({
+          "nome": roupa["nome"],
+          "icon": roupa["icon"],
+          "categoria": categoria,
+        });
+      }
+    });
+
+    if (buscaTexto.isEmpty) {
+      return categoriaSelecionada.isEmpty
+          ? []
+          : roupasCategoria[categoriaSelecionada]!;
+    }
+
+    return todasRoupas
+        .where((r) =>
+            r["nome"].toLowerCase().contains(buscaTexto.toLowerCase()))
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          /// fundo animado
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (_, __) {
+              return CustomPaint(
+                painter: SmoothMovingBackgroundPainter(
+                  animationValue: _controller.value,
+                  roxoEscuro: roxoEscuro,
+                  roxoPrincipal: roxoPrincipal,
+                ),
+                child: Container(),
+              );
+            },
+          ),
+
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 25),
+
+                //--------------------- HEADER -----------------------
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white30,
+                              width: 1,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              "Look & Mood",
+                              style: GoogleFonts.cinzelDecorative(
+                                color: Colors.white,
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 5.5,
+                              ),
+                            ),
+                            Text(
+                              "Escolha sua roupa favorita!",
+                              style: GoogleFonts.lora(
+                                color: Colors.white70,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 42),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                //--------------------- CAMPO DE BUSCA -----------------------
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.search, color: Colors.white70),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: "Procurar estilos...",
+                              hintStyle:
+                                  TextStyle(color: Colors.white54, fontSize: 16),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                buscaTexto = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                SizedBox(
+                  height: 60,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: categorias.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final cat = categorias[index]["nome"];
+                      final icon = categorias[index]["icon"];
+
+                      final bool ativo = categoriaSelecionada == cat;
+
+                      return GestureRecognizerWidget(
+                        ativo: ativo,
+                        icon: icon,
+                        cat: cat,
+                        onTap: () {
+                          setState(() {
+                            categoriaSelecionada = cat;
+                            buscaTexto = "";
+                            _searchController.clear();
+                          });
+                        },
+                        roxoPrincipal: roxoPrincipal,
+                        roxoEscuro: roxoEscuro,
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                //--------------------- LISTA DE ROUPAS -----------------------
+                Expanded(
+                  child: roupasFiltradas.isEmpty
+                      ? const Center(
+                          child: Text(
+                            "Nenhum estilo encontrado",
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        )
+                      : GridView.count(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 20,
+                          crossAxisSpacing: 20,
+                          children: roupasFiltradas.map((roupa) {
+                            final nome = roupa["nome"];
+                            final iconPath = roupa["icon"];
+                            final isFav = favoritos[nome] ?? false;
+
+                            return Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(18),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    roxoEscuro.withOpacity(0.8),
+                                    roxoPrincipal.withOpacity(0.7),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: Stack(
+                                children: [
+                                  Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          iconPath,
+                                          width: 58,
+                                          height: 58,
+                                          fit: BoxFit.contain,
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Text(
+                                          nome,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  Positioned(
+                                    right: 8,
+                                    top: 6,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          favoritos[nome] = !isFav;
+                                        });
+                                      },
+                                      child: Icon(
+                                        isFav
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color:
+                                            isFav ? Colors.pink : Colors.white,
+                                        size: 26,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// WIDGET PARA CATEGORIAS
+class GestureRecognizerWidget extends StatelessWidget {
+  final bool ativo;
+  final String icon;
+  final String cat;
+  final Function() onTap;
+  final Color roxoPrincipal;
+  final Color roxoEscuro;
+
+  const GestureRecognizerWidget({
+    super.key,
+    required this.ativo,
+    required this.icon,
+    required this.cat,
+    required this.onTap,
+    required this.roxoPrincipal,
+    required this.roxoEscuro,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: ativo
+                ? [roxoPrincipal, roxoEscuro]
+                : [Colors.white10, Colors.white10],
+          ),
+        ),
+        child: Row(
+          children: [
+            Image.asset(
+              icon,
+              width: 22,
+              height: 22,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              cat,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// fundo animado
+class SmoothMovingBackgroundPainter extends CustomPainter {
+  final double animationValue;
+  final Color roxoPrincipal;
+  final Color roxoEscuro;
+
+  SmoothMovingBackgroundPainter({
+    required this.animationValue,
+    required this.roxoPrincipal,
+    required this.roxoEscuro,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double shift = sin(animationValue * 5 * pi) * 0.5 + 0.5;
+
+    final Paint paint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          Color.lerp(roxoEscuro, roxoPrincipal, shift * 0.6)!,
+          Color.lerp(roxoPrincipal, Colors.deepPurpleAccent, shift * 0.4)!,
+        ],
+        begin: Alignment(-0.5 + shift, -0.8 + shift * 0.4),
+        end: Alignment(1.0 - shift * 0.7, 1.0 - shift * 0.5),
+      ).createShader(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+      );
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}

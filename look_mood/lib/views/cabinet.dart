@@ -1,6 +1,9 @@
+// RoupasView — corrigido e funcional
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:look_mood/views/cabinet_inside.dart';
 
 class RoupasView extends StatefulWidget {
   const RoupasView({super.key});
@@ -22,7 +25,6 @@ class _RoupasViewState extends State<RoupasView>
   final TextEditingController _searchController = TextEditingController();
   final Map<String, bool> favoritos = {};
 
-  // categorias de roupas com imagens do assets
   final List<Map<String, dynamic>> categorias = [
     {"nome": "Casacos", "icon": "assets/icons/3.png"},
     {"nome": "Calças", "icon": "assets/icons/4.png"},
@@ -33,7 +35,6 @@ class _RoupasViewState extends State<RoupasView>
     {"nome": "Saltos", "icon": "assets/icons/7.png"},
   ];
 
-  // roupas por categoria com imagens também
   final Map<String, List<Map<String, dynamic>>> roupasCategoria = {
     "Casacos": [
       {"nome": "Jaqueta jeans", "icon": "assets/icons/3.1.png"},
@@ -81,29 +82,18 @@ class _RoupasViewState extends State<RoupasView>
     super.dispose();
   }
 
-  // ------------------------- FILTRO DE BUSCA -------------------------
   List<Map<String, dynamic>> get roupasFiltradas {
-    List<Map<String, dynamic>> todasRoupas = [];
+    if (categoriaSelecionada.isEmpty) return [];
 
-    roupasCategoria.forEach((categoria, lista) {
-      for (var roupa in lista) {
-        todasRoupas.add({
-          "nome": roupa["nome"],
-          "icon": roupa["icon"],
-          "categoria": categoria,
-        });
-      }
-    });
+    final roupas = roupasCategoria[categoriaSelecionada]!;
 
-    if (buscaTexto.isEmpty) {
-      return categoriaSelecionada.isEmpty
-          ? []
-          : roupasCategoria[categoriaSelecionada]!;
-    }
+    if (buscaTexto.isEmpty) return roupas;
 
-    return todasRoupas
-        .where((r) =>
-            r["nome"].toLowerCase().contains(buscaTexto.toLowerCase()))
+    return roupas
+        .where((r) => r["nome"]
+            .toString()
+            .toLowerCase()
+            .contains(buscaTexto.toLowerCase()))
         .toList();
   }
 
@@ -112,7 +102,6 @@ class _RoupasViewState extends State<RoupasView>
     return Scaffold(
       body: Stack(
         children: [
-          /// fundo animado
           AnimatedBuilder(
             animation: _controller,
             builder: (_, __) {
@@ -133,7 +122,6 @@ class _RoupasViewState extends State<RoupasView>
               children: [
                 const SizedBox(height: 25),
 
-                //--------------------- HEADER -----------------------
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
@@ -146,15 +134,9 @@ class _RoupasViewState extends State<RoupasView>
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.15),
                             shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white30,
-                              width: 1,
-                            ),
+                            border: Border.all(color: Colors.white30, width: 1),
                           ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                          ),
+                          child: const Icon(Icons.arrow_back, color: Colors.white),
                         ),
                       ),
 
@@ -174,8 +156,8 @@ class _RoupasViewState extends State<RoupasView>
                               "Escolha sua roupa favorita!",
                               style: GoogleFonts.lora(
                                 color: Colors.white70,
-                                fontWeight: FontWeight.bold,
                                 fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
@@ -189,7 +171,6 @@ class _RoupasViewState extends State<RoupasView>
 
                 const SizedBox(height: 25),
 
-                //--------------------- CAMPO DE BUSCA -----------------------
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
@@ -210,13 +191,10 @@ class _RoupasViewState extends State<RoupasView>
                             decoration: const InputDecoration(
                               border: InputBorder.none,
                               hintText: "Procurar estilos...",
-                              hintStyle:
-                                  TextStyle(color: Colors.white54, fontSize: 16),
+                              hintStyle: TextStyle(color: Colors.white54),
                             ),
                             onChanged: (value) {
-                              setState(() {
-                                buscaTexto = value;
-                              });
+                              setState(() => buscaTexto = value);
                             },
                           ),
                         ),
@@ -234,16 +212,17 @@ class _RoupasViewState extends State<RoupasView>
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     itemCount: categorias.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) {
+                    itemBuilder: (_, index) {
                       final cat = categorias[index]["nome"];
                       final icon = categorias[index]["icon"];
-
-                      final bool ativo = categoriaSelecionada == cat;
+                      final ativo = categoriaSelecionada == cat;
 
                       return GestureRecognizerWidget(
                         ativo: ativo,
                         icon: icon,
                         cat: cat,
+                        roxoPrincipal: roxoPrincipal,
+                        roxoEscuro: roxoEscuro,
                         onTap: () {
                           setState(() {
                             categoriaSelecionada = cat;
@@ -251,8 +230,6 @@ class _RoupasViewState extends State<RoupasView>
                             _searchController.clear();
                           });
                         },
-                        roxoPrincipal: roxoPrincipal,
-                        roxoEscuro: roxoEscuro,
                       );
                     },
                   ),
@@ -260,20 +237,15 @@ class _RoupasViewState extends State<RoupasView>
 
                 const SizedBox(height: 20),
 
-                //--------------------- LISTA DE ROUPAS -----------------------
                 Expanded(
                   child: roupasFiltradas.isEmpty
                       ? const Center(
-                          child: Text(
-                            "Nenhum estilo encontrado",
-                            style: TextStyle(color: Colors.white70),
-                          ),
+                          child: Text("Nenhum estilo encontrado",
+                              style: TextStyle(color: Colors.white70)),
                         )
                       : GridView.count(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
+                              horizontal: 20, vertical: 10),
                           crossAxisCount: 2,
                           mainAxisSpacing: 20,
                           crossAxisSpacing: 20,
@@ -282,63 +254,73 @@ class _RoupasViewState extends State<RoupasView>
                             final iconPath = roupa["icon"];
                             final isFav = favoritos[nome] ?? false;
 
-                            return Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    roxoEscuro.withOpacity(0.8),
-                                    roxoPrincipal.withOpacity(0.7),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              child: Stack(
-                                children: [
-                                  Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Image.asset(
-                                          iconPath,
-                                          width: 58,
-                                          height: 58,
-                                          fit: BoxFit.contain,
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Text(
-                                          nome,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => OpcaoRoupaView(
+                                      nomeRoupa: nome,
+                                      listaOpcoes:
+                                          roupasCategoria[categoriaSelecionada]!,
                                     ),
                                   ),
-
-                                  Positioned(
-                                    right: 8,
-                                    top: 6,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          favoritos[nome] = !isFav;
-                                        });
-                                      },
-                                      child: Icon(
-                                        isFav
-                                            ? Icons.favorite
-                                            : Icons.favorite_border,
-                                        color:
-                                            isFav ? Colors.pink : Colors.white,
-                                        size: 26,
+                                );
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      roxoEscuro.withOpacity(0.8),
+                                      roxoPrincipal.withOpacity(0.7),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Image.asset(
+                                            iconPath,
+                                            width: 58,
+                                            height: 58,
+                                            fit: BoxFit.contain,
+                                            color: Colors.white,
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Text(
+                                            nome,
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                ],
+                                    Positioned(
+                                      right: 8,
+                                      top: 6,
+                                      child: GestureDetector(
+                                        onTap: () => setState(
+                                            () => favoritos[nome] = !isFav),
+                                        child: Icon(
+                                          isFav
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          color:
+                                              isFav ? Colors.pink : Colors.white,
+                                          size: 26,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           }).toList(),
@@ -353,7 +335,8 @@ class _RoupasViewState extends State<RoupasView>
   }
 }
 
-// WIDGET PARA CATEGORIAS
+// WIDGET DE CATEGORIA
+
 class GestureRecognizerWidget extends StatelessWidget {
   final bool ativo;
   final String icon;
@@ -382,26 +365,18 @@ class GestureRecognizerWidget extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
-            colors: ativo
-                ? [roxoPrincipal, roxoEscuro]
-                : [Colors.white10, Colors.white10],
+            colors:
+                ativo ? [roxoPrincipal, roxoEscuro] : [Colors.white10, Colors.white10],
           ),
         ),
         child: Row(
           children: [
-            Image.asset(
-              icon,
-              width: 22,
-              height: 22,
-              color: Colors.white,
-            ),
+            Image.asset(icon, width: 22, height: 22, color: Colors.white),
             const SizedBox(width: 8),
             Text(
               cat,
               style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+                  color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -410,7 +385,8 @@ class GestureRecognizerWidget extends StatelessWidget {
   }
 }
 
-// fundo animado
+// FUNDO ANIMADO
+
 class SmoothMovingBackgroundPainter extends CustomPainter {
   final double animationValue;
   final Color roxoPrincipal;
@@ -434,11 +410,10 @@ class SmoothMovingBackgroundPainter extends CustomPainter {
         ],
         begin: Alignment(-0.5 + shift, -0.8 + shift * 0.4),
         end: Alignment(1.0 - shift * 0.7, 1.0 - shift * 0.5),
-      ).createShader(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-      );
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+    canvas.drawRect(
+        Rect.fromLTWH(0, 0, size.width, size.height), paint);
   }
 
   @override

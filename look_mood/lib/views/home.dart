@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:look_mood/views/about_us.dart';
 import 'package:look_mood/views/cabinet.dart';
 import 'package:look_mood/views/login.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -189,6 +190,15 @@ class _HomeViewState extends State<HomeView>
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const RoupasView()),
+            );
+            break;
+        }
+
+        switch (index) {
+          case 3:
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SobreNosView()),
             );
             break;
         }

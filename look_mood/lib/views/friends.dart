@@ -75,10 +75,8 @@ class _AmigosViewState extends State<AmigosView>
                 children: [
                   const SizedBox(height: 25),
 
-                  // ---------------- HEADER CORRIGIDO ----------------
                   Row(
                     children: [
-                      // botão à esquerda
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Container(

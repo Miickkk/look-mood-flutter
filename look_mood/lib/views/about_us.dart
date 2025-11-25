@@ -218,7 +218,7 @@ class _SobreNosViewState extends State<SobreNosView>
                               child: _buildInfoCard(
                                 Icons.people,
                                 "Quem Criou",
-                                "Este aplicativo foi criado pelas desenvolvedoras Anick Lima e Maria Luiza, que juntaram criatividade, design e programação para criar uma experiência única.",
+                                "Este aplicativo foi criado pela desenvolvedora Anick Lima, com pariticipação de Maria Luiza no protótipo que juntaram criatividade, design e programação para criar uma experiência única.",
                               ),
                             ),
                           ],

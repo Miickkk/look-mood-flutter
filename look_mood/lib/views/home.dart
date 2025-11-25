@@ -7,6 +7,8 @@ import 'package:look_mood/views/login.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:look_mood/views/friends.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:look_mood/views/musics.dart';
+import 'package:look_mood/views/profile.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class HomeView extends StatefulWidget {
@@ -157,6 +159,7 @@ class _HomeViewState extends State<HomeView>
                         _buildCard(Icons.library_music, 'Músicas', 2),
                         _buildCard(Icons.info, 'Sobre Nós', 3),
                         _buildCard(Icons.person, 'Perfil', 4),
+                        _buildCard(Icons.join_full, 'Junção', 5),
                       ],
                     ),
                   ),
@@ -195,10 +198,28 @@ class _HomeViewState extends State<HomeView>
         }
 
         switch (index) {
+          case 2:
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MusicasView()),
+            );
+            break;
+        }
+
+        switch (index) {
           case 3:
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SobreNosView()),
+            );
+            break;
+        }
+
+        switch (index) {
+          case 4:
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PerfilView(nome: '', email: '', quantidadeAmigos: 0)),
             );
             break;
         }

@@ -1,9 +1,11 @@
-// RoupasView — corrigido e funcional
+// lib/views/cabinet.dart
 
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:look_mood/controller/favorites_manager.dart';
 import 'package:look_mood/views/cabinet_inside.dart';
+import 'package:look_mood/controller/favorites_manager.dart';
 
 class RoupasView extends StatefulWidget {
   const RoupasView({super.key});
@@ -23,7 +25,8 @@ class _RoupasViewState extends State<RoupasView>
   String buscaTexto = "";
 
   final TextEditingController _searchController = TextEditingController();
-  final Map<String, bool> favoritos = {};
+
+  final FavoritesManager fav = FavoritesManager();
 
   final List<Map<String, dynamic>> categorias = [
     {"nome": "Casacos", "icon": "assets/icons/3.png"},
@@ -90,10 +93,11 @@ class _RoupasViewState extends State<RoupasView>
     if (buscaTexto.isEmpty) return roupas;
 
     return roupas
-        .where((r) => r["nome"]
-            .toString()
-            .toLowerCase()
-            .contains(buscaTexto.toLowerCase()))
+        .where(
+          (r) => r["nome"].toString().toLowerCase().contains(
+            buscaTexto.toLowerCase(),
+          ),
+        )
         .toList();
   }
 
@@ -136,7 +140,10 @@ class _RoupasViewState extends State<RoupasView>
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white30, width: 1),
                           ),
-                          child: const Icon(Icons.arrow_back, color: Colors.white),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
 
@@ -164,7 +171,7 @@ class _RoupasViewState extends State<RoupasView>
                         ),
                       ),
 
-                      const SizedBox(width: 42),
+                      const SizedBox(width: 33),
                     ],
                   ),
                 ),
@@ -216,13 +223,9 @@ class _RoupasViewState extends State<RoupasView>
                       final cat = categorias[index]["nome"];
                       final icon = categorias[index]["icon"];
                       final ativo = categoriaSelecionada == cat;
+                      final bool isFav = fav.categorias[cat] ?? false;
 
-                      return GestureRecognizerWidget(
-                        ativo: ativo,
-                        icon: icon,
-                        cat: cat,
-                        roxoPrincipal: roxoPrincipal,
-                        roxoEscuro: roxoEscuro,
+                      return GestureDetector(
                         onTap: () {
                           setState(() {
                             categoriaSelecionada = cat;
@@ -230,6 +233,54 @@ class _RoupasViewState extends State<RoupasView>
                             _searchController.clear();
                           });
                         },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: LinearGradient(
+                              colors: ativo
+                                  ? [roxoPrincipal, roxoEscuro]
+                                  : [Colors.white10, Colors.white10],
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Image.asset(
+                                icon,
+                                width: 22,
+                                height: 22,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                cat,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    fav.toggleCategoria(cat);
+                                  });
+                                },
+                                child: Icon(
+                                  isFav
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: isFav ? Colors.pink : Colors.white,
+                                  size: 22,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -240,32 +291,34 @@ class _RoupasViewState extends State<RoupasView>
                 Expanded(
                   child: roupasFiltradas.isEmpty
                       ? const Center(
-                          child: Text("Nenhum estilo encontrado",
-                              style: TextStyle(color: Colors.white70)),
+                          child: Text(
+                            "Nenhum estilo encontrado",
+                            style: TextStyle(color: Colors.white70),
+                          ),
                         )
                       : GridView.count(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
                           crossAxisCount: 2,
                           mainAxisSpacing: 20,
                           crossAxisSpacing: 20,
                           children: roupasFiltradas.map((roupa) {
                             final nome = roupa["nome"];
                             final iconPath = roupa["icon"];
-                            final isFav = favoritos[nome] ?? false;
+                            final bool isFav =
+                                (fav.roupas[nome] ?? false) == true;
 
                             return GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => OpcaoRoupaView(
-                                      nomeRoupa: nome,
-                                      listaOpcoes:
-                                          roupasCategoria[categoriaSelecionada]!,
-                                    ),
+                                    builder: (_) =>
+                                        OpcaoRoupaView(nomeRoupa: nome),
                                   ),
-                                );
+                                ).then((_) => setState(() {}));
                               },
                               child: Container(
                                 decoration: BoxDecoration(
@@ -297,8 +350,9 @@ class _RoupasViewState extends State<RoupasView>
                                           Text(
                                             nome,
                                             style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold),
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -307,17 +361,12 @@ class _RoupasViewState extends State<RoupasView>
                                       right: 8,
                                       top: 6,
                                       child: GestureDetector(
-                                        onTap: () => setState(
-                                            () => favoritos[nome] = !isFav),
-                                        child: Icon(
-                                          isFav
-                                              ? Icons.favorite
-                                              : Icons.favorite_border,
-                                          color:
-                                              isFav ? Colors.pink : Colors.white,
-                                          size: 26,
-                                        ),
-                                      ),
+                                        onTap: () {
+                                          setState(() {
+                                            fav.toggleRoupa(nome);
+                                          });
+                                        },
+                                                                          ),
                                     ),
                                   ],
                                 ),
@@ -335,8 +384,7 @@ class _RoupasViewState extends State<RoupasView>
   }
 }
 
-// WIDGET DE CATEGORIA
-
+// WIDGET DE CATEGORIA (mesmo que vc tinha)
 class GestureRecognizerWidget extends StatelessWidget {
   final bool ativo;
   final String icon;
@@ -365,8 +413,9 @@ class GestureRecognizerWidget extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
-            colors:
-                ativo ? [roxoPrincipal, roxoEscuro] : [Colors.white10, Colors.white10],
+            colors: ativo
+                ? [roxoPrincipal, roxoEscuro]
+                : [Colors.white10, Colors.white10],
           ),
         ),
         child: Row(
@@ -376,7 +425,9 @@ class GestureRecognizerWidget extends StatelessWidget {
             Text(
               cat,
               style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -385,8 +436,7 @@ class GestureRecognizerWidget extends StatelessWidget {
   }
 }
 
-// FUNDO ANIMADO
-
+// FUNDO ANIMADO (mantive como no teu original)
 class SmoothMovingBackgroundPainter extends CustomPainter {
   final double animationValue;
   final Color roxoPrincipal;
@@ -412,8 +462,7 @@ class SmoothMovingBackgroundPainter extends CustomPainter {
         end: Alignment(1.0 - shift * 0.7, 1.0 - shift * 0.5),
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
-    canvas.drawRect(
-        Rect.fromLTWH(0, 0, size.width, size.height), paint);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
   }
 
   @override

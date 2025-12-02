@@ -1,8 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class PerfilAmigoView extends StatelessWidget {
   final String nome;
@@ -11,7 +9,6 @@ class PerfilAmigoView extends StatelessWidget {
 
   final Color roxoPrincipal = const Color(0xFF6137DE);
   final Color roxoEscuro = const Color(0xFF241536);
-  final Color roxoBotao = const Color(0xFF3E22A0);
 
   final List<IconData> roupas = [
     Icons.checkroom,
@@ -46,7 +43,6 @@ class PerfilAmigoView extends StatelessWidget {
               );
             },
           ),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(22),
@@ -161,17 +157,43 @@ class PerfilAmigoView extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
+                  // BOTÃO ADICIONAR AMIGO - BRANCO CINTILANTE
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: roxoBotao,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 45, vertical: 15),
+                      padding: const EdgeInsets.symmetric(horizontal: 45, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      backgroundColor: Colors.white.withOpacity(0.3),
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.white.withOpacity(0.5),
+                      elevation: 8,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context, true); // Retorna true para indicar que adicionou
+                    },
+                    child: Text(
+                      "Adicionar amigo",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.15),
+                      padding: const EdgeInsets.symmetric(horizontal: 45, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pop(context); // Apenas voltar
                     },
                     child: Text(
                       "Voltar",
@@ -183,6 +205,7 @@ class PerfilAmigoView extends StatelessWidget {
                     ),
                   ),
 
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
@@ -193,7 +216,7 @@ class PerfilAmigoView extends StatelessWidget {
   }
 }
 
-// COPIEI SEU FUNDO ANIMADO EXATO
+// FUNDO ANIMADO
 class _BackgroundPainter extends CustomPainter {
   final double animationValue;
   final Color roxoPrincipal;

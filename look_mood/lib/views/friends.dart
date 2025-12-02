@@ -121,7 +121,7 @@ class _AmigosViewState extends State<AmigosView>
                       ),
 
                       // espaço para balancear o botão
-                      const SizedBox(width: 50),
+                      const SizedBox(width: 33),
                     ],
                   ),
 

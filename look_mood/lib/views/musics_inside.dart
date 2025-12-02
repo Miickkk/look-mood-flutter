@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:look_mood/controller/favorites_manager.dart';
 import 'package:look_mood/views/lyrics.dart';
 import 'package:look_mood/views/lyrics.dart';
 
@@ -362,7 +363,7 @@ We never go out of style""",
                         ),
                       ),
 
-                      const SizedBox(width: 40),
+                      const SizedBox(width: 45),
                     ],
                   ),
 
@@ -374,6 +375,13 @@ We never go out of style""",
                       itemCount: listaMusicas.length,
                       itemBuilder: (_, i) {
                         final m = listaMusicas[i];
+                        final String titulo = m["titulo"]!;
+                        final String artista = m["artista"]!;
+
+                        // Pegando o estado atual do favorito do FavoritesManager
+                        final bool isFavorito =
+                            FavoritesManager().musicas[titulo]?["favorito"] ??
+                            false;
 
                         return GestureDetector(
                           onTap: () {
@@ -381,8 +389,8 @@ We never go out of style""",
                               context,
                               MaterialPageRoute(
                                 builder: (_) => LetraMusicaView(
-                                  titulo: m["titulo"]!,
-                                  artista: m["artista"]!,
+                                  titulo: titulo,
+                                  artista: artista,
                                   letra: m["letra"]!,
                                 ),
                               ),
@@ -414,26 +422,44 @@ We never go out of style""",
                                   size: 32,
                                 ),
                                 const SizedBox(width: 15),
-
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      m["titulo"]!,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        titulo,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                    Text(
-                                      m["artista"]!,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 14,
+                                      Text(
+                                        artista,
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 14,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    isFavorito
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: isFavorito
+                                        ? Colors.pinkAccent
+                                        : Colors.white,
+                                    size: 28,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      FavoritesManager().toggleMusica(titulo);
+                                    });
+                                  },
                                 ),
                               ],
                             ),

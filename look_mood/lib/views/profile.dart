@@ -1,8 +1,12 @@
+// lib/views/perfil.dart
+
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:look_mood/controller/favorites_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PerfilView extends StatefulWidget {
   final String nome;
@@ -27,26 +31,76 @@ class _PerfilViewState extends State<PerfilView>
   final Color roxoPrincipal = const Color(0xFF6137DE);
   final Color roxoEscuro = const Color(0xFF241536);
 
-  String abaSelecionada = "Email";
+  String abaSelecionada = "Perfil";
 
   // EDITÁVEIS
   String nome = "";
   String email = "";
+  String descricao = "";
   File? fotoPerfil;
 
-  List<String> musicas = ["Pop", "Trap"];
-  List<String> looks = ["Street", "Casual"];
+  // CONTROLLERS
+  final TextEditingController nomeCtrl = TextEditingController();
+  final TextEditingController emailCtrl = TextEditingController();
+  final TextEditingController descCtrl = TextEditingController();
+
+  // MODO EDIÇÃO
+  bool isEditing = false;
+
+  /// FAVORITOS
+  final FavoritesManager fav = FavoritesManager();
 
   @override
   void initState() {
     super.initState();
+
     nome = widget.nome;
     email = widget.email;
+
+    _carregarDados();
 
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 20),
     )..repeat();
+  }
+
+  Future<void> _carregarDados() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      nome = prefs.getString("perfil_nome") ?? widget.nome;
+      email = prefs.getString("perfil_email") ?? widget.email;
+      descricao = prefs.getString("perfil_desc") ?? "";
+
+      nomeCtrl.text = nome;
+      emailCtrl.text = email;
+      descCtrl.text = descricao;
+
+      final fotoPath = prefs.getString("perfil_foto");
+      if (fotoPath != null && File(fotoPath).existsSync()) {
+        fotoPerfil = File(fotoPath);
+      }
+    });
+  }
+
+  Future<void> _salvarPerfil() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString("perfil_nome", nome);
+    await prefs.setString("perfil_email", email);
+    await prefs.setString("perfil_desc", descricao);
+
+    if (fotoPerfil != null) {
+      await prefs.setString("perfil_foto", fotoPerfil!.path);
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Perfil salvo com sucesso!"),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   Future<void> _trocarFoto() async {
@@ -55,97 +109,190 @@ class _PerfilViewState extends State<PerfilView>
 
     if (imagem != null) {
       setState(() => fotoPerfil = File(imagem.path));
+
+      // Salvar imediatamente
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("perfil_foto", imagem.path);
     }
   }
 
-  void _editarPerfil() {
-    final nomeController = TextEditingController(text: nome);
-    final emailController = TextEditingController(text: email);
+  @override
+  Widget build(BuildContext context) {
+    final categoriasFavoritas = fav.categorias.entries
+        .where((e) => e.value)
+        .map((e) => e.key)
+        .toList();
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: roxoEscuro.withOpacity(0.95),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "Editar Perfil",
-                style: GoogleFonts.lora(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+    final roupasFavoritas = fav.roupas.entries
+        .where((e) => e.value["favorito"] == true)
+        .map((e) => e.key)
+        .toList();
+
+    final modelosFavoritos = fav.modelos.entries
+        .where((e) => e.value)
+        .map((e) => e.key)
+        .toList();
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (_, __) {
+              return CustomPaint(
+                painter: SmoothMovingBackgroundPainter(
+                  animationValue: _controller.value,
+                  roxoEscuro: roxoEscuro,
+                  roxoPrincipal: roxoPrincipal,
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              // Nome
-              TextField(
-                controller: nomeController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: "Nome",
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: roxoPrincipal),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              // Email
-              TextField(
-                controller: emailController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: roxoPrincipal),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: roxoPrincipal,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                ),
-                onPressed: () {
-                  setState(() {
-                    nome = nomeController.text;
-                    email = emailController.text;
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text("Salvar"),
-              ),
-            ],
+                child: Container(),
+              );
+            },
           ),
-        );
-      },
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              child: Column(
+                children: [
+                  const SizedBox(height: 25),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white30, width: 1),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              "Look & Mood",
+                              style: GoogleFonts.cinzelDecorative(
+                                color: Colors.white,
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 5.5,
+                              ),
+                            ),
+                            Text(
+                              "Perfil do usuário",
+                              style: GoogleFonts.lora(
+                                color: Colors.white70,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 33),
+                    ],
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  GestureDetector(
+                    onTap: _trocarFoto,
+                    child: CircleAvatar(
+                      radius: 55,
+                      backgroundColor: roxoPrincipal,
+                      backgroundImage: fotoPerfil != null
+                          ? FileImage(fotoPerfil!)
+                          : null,
+                      child: fotoPerfil == null
+                          ? const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 45,
+                            )
+                          : null,
+                    ),
+                  ),
+
+                  const SizedBox(height: 50),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildAba("Perfil"),
+                      _buildAba("Look"),
+                      _buildAba("Música"),
+                    ],
+                  ),
+                  const SizedBox(height: 25),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.white.withOpacity(0.12),
+                      border: Border.all(color: Colors.white24, width: 1.2),
+                    ),
+                    child: _conteudoDaAba(
+                      categoriasFavoritas,
+                      roupasFavoritas,
+                      modelosFavoritos,
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Amigos",
+                      style: GoogleFonts.lora(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Container(
+                    width: 100,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: roxoPrincipal.withOpacity(0.85),
+                    ),
+                    child: Center(
+                      child: Text(
+                        widget.quantidadeAmigos.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 38,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 60),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildAba(String nomeAba) {
     final ativo = abaSelecionada == nomeAba;
-
     return GestureDetector(
       onTap: () => setState(() => abaSelecionada = nomeAba),
       child: AnimatedContainer(
@@ -170,280 +317,192 @@ class _PerfilViewState extends State<PerfilView>
     );
   }
 
-  Widget _conteudoDaAba() {
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.white54),
+      enabledBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.white24),
+      ),
+      focusedBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _conteudoDaAba(
+    List<String> categorias,
+    List<String> roupas,
+    List<String> modelos,
+  ) {
     switch (abaSelecionada) {
-      case "Email":
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Nome:",
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-            Text(
-              nome,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Text(
-              "Email:",
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-            Text(
-              email,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        );
-
-      case "Música":
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Suas músicas",
-              style: GoogleFonts.lora(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            Column(
-              children: musicas.map((m) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      m,
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(() => musicas.remove(m)),
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ],
-        );
-
       case "Look":
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Seus looks",
-              style: GoogleFonts.lora(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+            const Text(
+              "Categorias favoritas",
+              style: TextStyle(color: Colors.white70, fontSize: 16),
             ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: categorias.isEmpty
+                  ? [
+                      const Text(
+                        "Nenhuma",
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    ]
+                  : categorias.map(_tag).toList(),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              "Roupas favoritas",
+              style: TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: modelos.isEmpty
+                  ? [
+                      const Text(
+                        "Nenhuma",
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    ]
+                  : modelos.map(_tag).toList(),
+            ),
+          ],
+        );
+      case "Música":
+        final musicasFavoritas = fav.musicas.entries
+            .where((e) => e.value["favorito"] == true)
+            .map((e) => e.key)
+            .toList();
 
-            const SizedBox(height: 15),
+        final categoriasMusicaisFavoritas = fav.categoriasMusicais.entries
+            .where((e) => e.value)
+            .map((e) => e.key)
+            .toList();
 
-            Column(
-              children: looks.map((l) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      l,
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(() => looks.remove(l)),
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
-                    ),
-                  ],
-                );
-              }).toList(),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Categorias favoritas",
+              style: TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: categoriasMusicaisFavoritas.isEmpty
+                  ? [
+                      const Text(
+                        "Nenhuma",
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    ]
+                  : categoriasMusicaisFavoritas.map(_tag).toList(),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              "Músicas favoritas",
+              style: TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: musicasFavoritas.isEmpty
+                  ? [
+                      const Text(
+                        "Nenhuma",
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    ]
+                  : musicasFavoritas.map(_tag).toList(),
             ),
           ],
         );
 
+      case "Perfil":
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Nome:", style: TextStyle(color: Colors.white70)),
+            TextField(
+              controller: nomeCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: _inputDecoration("Digite seu nome"),
+              onTap: () => setState(() => isEditing = true),
+              onChanged: (v) => nome = v,
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text("Email:", style: TextStyle(color: Colors.white70)),
+            TextField(
+              controller: emailCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: _inputDecoration("Digite seu email"),
+              onTap: () => setState(() => isEditing = true),
+              onChanged: (v) => email = v,
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text("Descrição:", style: TextStyle(color: Colors.white70)),
+            TextField(
+              controller: descCtrl,
+              maxLines: 1,
+              style: const TextStyle(color: Colors.white),
+              decoration: _inputDecoration("Digite uma descrição"),
+              onTap: () => setState(() => isEditing = true),
+              onChanged: (v) => descricao = v,
+            ),
+
+            const SizedBox(height: 30),
+
+            if (isEditing)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: roxoPrincipal,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 25,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: () {
+                  _salvarPerfil();
+                  setState(() => isEditing = false);
+                },
+                child: const Text(
+                  "Salvar",
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+              ),
+          ],
+        );
       default:
         return const SizedBox();
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // FUNDO ANIMADO
-          AnimatedBuilder(
-            animation: _controller,
-            builder: (_, __) {
-              return CustomPaint(
-                painter: SmoothMovingBackgroundPainter(
-                  animationValue: _controller.value,
-                  roxoEscuro: roxoEscuro,
-                  roxoPrincipal: roxoPrincipal,
-                ),
-                child: Container(),
-              );
-            },
-          ),
-
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-
-                  // 🔙 BOTÃO VOLTAR
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 32,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-
-                  // Título
-                  Text(
-                    "Look & Mood",
-                    style: GoogleFonts.cinzelDecorative(
-                      color: Colors.white,
-                      fontSize: 42,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 5,
-                    ),
-                  ),
-
-                  Text(
-                    "Perfil",
-                    style: GoogleFonts.lora(
-                      color: Colors.white70,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // FOTO DE PERFIL (CLICÁVEL)
-                  GestureDetector(
-                    onTap: _trocarFoto,
-                    child: CircleAvatar(
-                      radius: 55,
-                      backgroundColor: roxoPrincipal,
-                      backgroundImage: fotoPerfil != null
-                          ? FileImage(fotoPerfil!)
-                          : null,
-                      child: fotoPerfil == null
-                          ? const Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
-                              size: 45,
-                            )
-                          : null,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // ✏️ EDITAR PERFIL
-                  TextButton(
-                    onPressed: _editarPerfil,
-                    child: Text(
-                      "Editar Perfil",
-                      style: GoogleFonts.lora(
-                        color: Colors.white70,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Abas
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildAba("Email"),
-                      _buildAba("Música"),
-                      _buildAba("Look"),
-                    ],
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // Conteúdo
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: Colors.white.withOpacity(0.12),
-                      border: Border.all(color: Colors.white24, width: 1.2),
-                    ),
-                    child: _conteudoDaAba(),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // Amigos
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Amigos",
-                      style: GoogleFonts.lora(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  Container(
-                    width: 100,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: roxoPrincipal.withOpacity(0.85),
-                    ),
-                    child: Center(
-                      child: Text(
-                        widget.quantidadeAmigos.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 38,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 60),
-                ],
-              ),
-            ),
-          ),
-        ],
+  Widget _tag(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white12,
+        borderRadius: BorderRadius.circular(20),
       ),
+      child: Text(text, style: const TextStyle(color: Colors.white)),
     );
   }
 }

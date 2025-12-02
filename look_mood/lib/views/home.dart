@@ -3,13 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:look_mood/views/about_us.dart';
 import 'package:look_mood/views/cabinet.dart';
+import 'package:look_mood/views/junction.dart';
 import 'package:look_mood/views/login.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:look_mood/views/friends.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:look_mood/views/musics.dart';
 import 'package:look_mood/views/profile.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:look_mood/controller/favorites_manager.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -31,7 +31,7 @@ class _HomeViewState extends State<HomeView>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 20), // animação suave e lenta
+      duration: const Duration(seconds: 20),
     )..repeat();
   }
 
@@ -46,10 +46,7 @@ class _HomeViewState extends State<HomeView>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: roxoEscuro,
-        title: const Text(
-          "Sair da conta",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text("Sair da conta", style: TextStyle(color: Colors.white)),
         content: const Text(
           "Tem certeza que deseja sair?",
           style: TextStyle(color: Colors.white70),
@@ -57,10 +54,7 @@ class _HomeViewState extends State<HomeView>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              "Cancelar",
-              style: TextStyle(color: Colors.white70),
-            ),
+            child: const Text("Cancelar", style: TextStyle(color: Colors.white70)),
           ),
           TextButton(
             onPressed: () async {
@@ -98,44 +92,38 @@ class _HomeViewState extends State<HomeView>
               children: [
                 const SizedBox(height: 40),
 
+                // LOGO + LOGOUT ICON
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "Look & Mood",
-                              style: GoogleFonts.cinzelDecorative(
-                                color: Colors.white,
-                                fontSize: 44,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 5.5,
-                              ),
+                      Column(
+                        children: [
+                          Text(
+                            "Look & Mood",
+                            style: GoogleFonts.cinzelDecorative(
+                              color: Colors.white,
+                              fontSize: 44,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 5.5,
                             ),
-                            Text(
-                              "Escolha sua música, e aproveite seu look!",
-                              style: GoogleFonts.lora(
-                                color: Colors.white70,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                letterSpacing: 1.0,
-                              ),
+                          ),
+                          Text(
+                            "Escolha sua música, e aproveite seu look!",
+                            style: GoogleFonts.lora(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              letterSpacing: 1.0,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                       Align(
                         alignment: Alignment.centerRight,
                         child: IconButton(
-                          icon: const Icon(
-                            Icons.logout,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                          icon: const Icon(Icons.logout, color: Colors.white, size: 28),
                           onPressed: _logout,
                         ),
                       ),
@@ -172,6 +160,7 @@ class _HomeViewState extends State<HomeView>
     );
   }
 
+  // ===================== CARD DO MENU ======================
   Widget _buildCard(IconData icon, String label, int index) {
     final bool isSelected = _selectedIndex == index;
 
@@ -179,48 +168,39 @@ class _HomeViewState extends State<HomeView>
       onTap: () {
         setState(() => _selectedIndex = index);
 
+        // 🚀 switch corrigido — agora funciona corretamente
         switch (index) {
           case 0:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AmigosView()),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AmigosView()));
             break;
-        }
 
-        switch (index) {
           case 1:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const RoupasView()),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const RoupasView()));
             break;
-        }
 
-        switch (index) {
           case 2:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MusicasView()),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const MusicasView()));
             break;
-        }
 
-        switch (index) {
           case 3:
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SobreNosView()),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const SobreNosView()));
             break;
-        }
 
-        switch (index) {
           case 4:
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const PerfilView(nome: '', email: '', quantidadeAmigos: 0)),
+              MaterialPageRoute(
+                builder: (_) => PerfilView(
+                  nome: "Seu Nome", 
+                  email: "seu@email.com",
+                  quantidadeAmigos: 0, 
+                ),
+              ),
             );
+            break;
+
+          case 5:
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const JuncaoView()));
             break;
         }
       },
@@ -267,6 +247,7 @@ class _HomeViewState extends State<HomeView>
   }
 }
 
+// ===================== BACKGROUND ANIMADO =====================
 class SmoothMovingBackgroundPainter extends CustomPainter {
   final double animationValue;
   final Color roxoPrincipal;

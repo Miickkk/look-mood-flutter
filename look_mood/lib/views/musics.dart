@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:look_mood/controller/favorites_manager.dart';
 import 'package:look_mood/views/musics_inside.dart';
 
 class MusicasView extends StatefulWidget {
@@ -150,7 +151,7 @@ class _MusicasViewState extends State<MusicasView>
                         ),
                       ),
 
-                      const SizedBox(width: 45),
+                      const SizedBox(width: 33),
                     ],
                   ),
 
@@ -196,6 +197,8 @@ class _MusicasViewState extends State<MusicasView>
           children: categoriasFiltradas.map((cat) {
             final String? img = cat["image"];
             final String label = cat["label"] ?? "Sem Nome";
+            final bool isFavorito =
+                FavoritesManager().categoriasMusicais[label] ?? false;
 
             return GestureDetector(
               onTap: () {
@@ -209,46 +212,66 @@ class _MusicasViewState extends State<MusicasView>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
-                      color: Colors.white.withOpacity(0.15),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withOpacity(0.20),
-                          blurRadius: 12,
-                          spreadRadius: 1,
+                  Stack(
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(22),
+                          color: Colors.white.withOpacity(0.15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withOpacity(0.20),
+                              blurRadius: 12,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.20),
+                            width: 1.4,
+                          ),
                         ),
-                      ],
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.20),
-                        width: 1.4,
-                      ),
-                    ),
-                    child: img == null
-                        ? const Icon(
-                            Icons.image_not_supported,
-                            color: Colors.white70,
-                          )
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(22),
-                            child: Center(
-                              child: ColorFiltered(
-                                colorFilter: const ColorFilter.mode(
-                                  Color.fromARGB(255, 217, 204, 255),
-                                  BlendMode.srcIn,
-                                ),
-                                child: Image.asset(
-                                  img,
-                                  width: 60,
-                                  height: 60,
-                                  fit: BoxFit.contain,
+                        child: img == null
+                            ? const Icon(
+                                Icons.image_not_supported,
+                                color: Colors.white70,
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(22),
+                                child: Center(
+                                  child: ColorFiltered(
+                                    colorFilter: const ColorFilter.mode(
+                                      Color.fromARGB(255, 217, 204, 255),
+                                      BlendMode.srcIn,
+                                    ),
+                                    child: Image.asset(
+                                      img,
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                      ),
+                      Positioned(
+                        top: -6,
+                        right: -5,
+                        child: IconButton(
+                          icon: Icon(
+                            isFavorito ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorito ? Colors.pinkAccent : Colors.white,
+                            size: 23,
                           ),
+                          onPressed: () {
+                            setState(() {
+                              FavoritesManager().toggleCategoriaMusical(label);
+                            });
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
                   Text(

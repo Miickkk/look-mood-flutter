@@ -162,7 +162,7 @@ class _SobreNosViewState extends State<SobreNosView>
                         ),
                       ),
 
-                      const SizedBox(width: 42),
+                      const SizedBox(width: 55),
                     ],
                   ),
                 ),

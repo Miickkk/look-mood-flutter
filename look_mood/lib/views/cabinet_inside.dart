@@ -1,6 +1,9 @@
+// lib/views/cabinet_inside.dart
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:look_mood/controller/favorites_manager.dart';
 
 final Map<String, List<Map<String, dynamic>>> modelosPorSubtipo = {
   "jaqueta jeans": [
@@ -16,11 +19,9 @@ final Map<String, List<Map<String, dynamic>>> modelosPorSubtipo = {
 class OpcaoRoupaView extends StatefulWidget {
   final String nomeRoupa;
 
-  /// Agora NÃO precisa mais enviar lista manualmente
   const OpcaoRoupaView({
     super.key,
     required this.nomeRoupa,
-    required List<Map<String, dynamic>> listaOpcoes,
   });
 
   @override
@@ -33,7 +34,7 @@ class _OpcaoRoupaViewState extends State<OpcaoRoupaView>
 
   final Color roxoPrincipal = const Color(0xFF6137DE);
   final Color roxoEscuro = const Color(0xFF241536);
-  final Map<String, bool> favoritos = {};
+  final FavoritesManager fav = FavoritesManager();
 
   late List<Map<String, dynamic>> listaOpcoesCorrigida;
 
@@ -41,9 +42,7 @@ class _OpcaoRoupaViewState extends State<OpcaoRoupaView>
   void initState() {
     super.initState();
 
-    /// Corrige o nome buscado = deixa tudo minúsculo
     final String chave = widget.nomeRoupa.trim().toLowerCase();
-
     listaOpcoesCorrigida = modelosPorSubtipo[chave] ?? [];
 
     _controller = AnimationController(
@@ -61,7 +60,7 @@ class _OpcaoRoupaViewState extends State<OpcaoRoupaView>
   Widget _buildCard(Map<String, dynamic> opc) {
     final String nome = opc['nome'] ?? 'Sem nome';
     final String foto = opc['foto'] ?? '';
-    final bool isFav = favoritos[nome] ?? false;
+    final bool isFav = fav.modelos[nome] ?? false;
 
     return Container(
       decoration: BoxDecoration(
@@ -88,9 +87,8 @@ class _OpcaoRoupaViewState extends State<OpcaoRoupaView>
                     ? Image.asset(
                         foto,
                         width: double.infinity,
-                        height: 200, 
-                        fit: BoxFit
-                            .contain, 
+                        height: 200,
+                        fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => Container(
                           height: 120,
                           color: Colors.purple.withOpacity(0.4),
@@ -121,7 +119,7 @@ class _OpcaoRoupaViewState extends State<OpcaoRoupaView>
             child: GestureDetector(
               onTap: () {
                 setState(() {
-                  favoritos[nome] = !(favoritos[nome] ?? false);
+                  fav.toggleModelo(nome);
                 });
               },
               child: Icon(
@@ -244,6 +242,7 @@ class _OpcaoRoupaViewState extends State<OpcaoRoupaView>
   }
 }
 
+// FUNDO (mesmo painter usado no cabinet.dart)
 class SmoothMovingBackgroundPainter extends CustomPainter {
   final double animationValue;
   final Color roxoPrincipal;
